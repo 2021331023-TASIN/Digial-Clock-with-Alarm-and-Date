@@ -1,13 +1,15 @@
-                                                       //*PROJECT DIGITAL CLOCK WITH ALARM AND DATE*//
+
 #include<iostream>
 #include<dos.h>
 #include<conio.h>
 #include<windows.h>
 #include<time.h>
+#include<vector>
+#include<fstream>
+#include <mmsystem.h>
+const int MAX_ALARMS = 10;
 
 using namespace std;
-
-                                                                     //*DISPLAY SETUP*?//
 
 const char *d0[7][4] ={  "##","##","##","##",
                          "#","  ","  "," #",
@@ -102,10 +104,7 @@ const char *sep[7][4] ={ "  ","  ","  "," ",
 HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 COORD CursorPosition;
 
-
-
-
-                                                                  //*CURSOR AND POSITIONING*//
+       //setting position of cursor
 
 void gotoxy(int x, int y)
 {
@@ -133,7 +132,7 @@ void setcursor (bool visible, DWORD size){
 
 }
 
-                                                                            //*DIGIT PRINTING*//
+                                                                       /*printing digit as per time*/
 void printDigit(int no, int x, int y)
 {
   for(int i=0;i<7;i++){
@@ -154,40 +153,137 @@ void printDigit(int no, int x, int y)
     }
   }
 }
-                                                             //*ALARM SETUP*//
+struct Alarm {
+    int hour;
+    int minute;
+    int second;
+};
+vector<Alarm> alarms;
+bool is24HourFormat = false;
+
+
+void toggleTimeFormat() {
+    is24HourFormat = !is24HourFormat;
+}
+
+
+void loadAlarms() {
+    ifstream file("alarms.txt");
+    if (file.is_open()) {
+        Alarm alarm;
+        while (file >> alarm.hour >> alarm.minute >> alarm.second) {
+            alarms.push_back(alarm);
+        }
+        file.close();
+    }
+}
+
+void saveAlarms() {
+    ofstream file("alarms.txt");
+    if (file.is_open()) {
+        for (const auto& alarm : alarms) {
+            file << alarm.hour << " " << alarm.minute << " " << alarm.second << endl;
+        }
+        file.close();
+    }
+}
+
+                                                   // Function to add a new alarm
+void addAlarm(int hour, int minute, int second) {
+    Alarm alarm = {hour, minute, second};
+    alarms.push_back(alarm);
+
+                                               // Limit the number of alarms to MAX_ALARMS
+    if (alarms.size() > MAX_ALARMS) {
+        alarms.erase(alarms.begin());
+    }
+
+    saveAlarms(); // Save the alarms to file
+}
+
+                                                     // Function to delete an alarm
+void deleteAlarm(int index) {
+    if (index >= 0 && index < alarms.size()) {
+        alarms.erase(alarms.begin() + index);
+        saveAlarms(); // Save the alarms to file
+    }
+}
+                                                    // Function to display the list of alarms
+void displayAlarms() {
+    system("cls");
+    cout << "List of Alarms:\n";
+    for (int i = 0; i < alarms.size(); ++i) {
+        cout << i + 1 << ". " << alarms[i].hour << "H " << alarms[i].minute << "M " << alarms[i].second << "S\n";
+    }
+    cout << "Press 'D' to delete an alarm, 'Esc' to go back.\n";
+
+    char ch = getch();
+    if (ch == 27) { // 'Esc' key pressed
+        return;
+    } else if (ch == 'D' || ch == 'd') {
+        cout << "Enter the alarm number to delete: ";
+        int alarmNumber;
+        cin >> alarmNumber;
+        deleteAlarm(alarmNumber - 1);
+    }
+}
+
+void playAlarmSound() {
+    PlaySoundW(L"C:\\Users\\HP\\Downloads\\mixkit-classic-alarm-995.wav", NULL, SND_FILENAME | SND_ASYNC);
+}
+
+
+
 
 bool isAlarmSet = false;
 
 void setAlarm(int &alarmHour, int &alarmMin, int &alarmSec) {
     system("cls");
 
-    cout << "Set Alarm Time (24-hour format)\n";
-    cout << "Hour: ";
+    cout << "Set Alarm Time\n";
+
+    if (is24HourFormat) {
+        cout << "Hour (24-hour format): ";
+    } else {
+        cout << "Hour: ";
+    }
+
     cin >> alarmHour;
+
     cout << "Minute: ";
     cin >> alarmMin;
+
     cout << "Second: ";
     cin >> alarmSec;
 
     isAlarmSet = true;
-
 }
-                                                                  //*ALARM SOUND*//
 
- void soundAlarm() {
+
+void soundAlarm() {
     cout << "\a";  // Beep sound to indicate alarm
-}
+        playAlarmSound();  // Play the alarm sound
 
-                                                                       //*ALARM CHECK*//
+}
 
 bool isAlarmTime(int alarmHour, int alarmMin, int alarmSec, int currentHour, int currentMin, int currentSec) {
-    return (alarmHour == currentHour && alarmMin == currentMin && alarmSec == currentSec);
+    if (is24HourFormat) {
+        return (alarmHour == currentHour && alarmMin == currentMin && alarmSec == currentSec);
+    } else {
+        // Convert 12-hour format to 24-hour format for comparison
+        int convertedAlarmHour = (alarmHour % 12) + (currentHour >= 12 ? 12 : 0);
+        int convertedCurrentHour = (currentHour % 12) + (currentHour >= 12 ? 12 : 0);
+
+        return (convertedAlarmHour == convertedCurrentHour &&
+                alarmMin == currentMin && alarmSec == currentSec);
+    }
 }
 
-                                                               //*MAIN FUNCTION*//
+
 
 int main()
 {
+    loadAlarms();
     system("cls");
     setcursor(0,0);                      //setting cursor invisible
 
@@ -234,7 +330,14 @@ int main()
             }
             else if (ch == 'S' || ch == 's') {
                 setAlarm(alarmHour, alarmMin, alarmSec);
+                 addAlarm(alarmHour, alarmMin, alarmSec);
 
+            }
+            else if (ch == 'L' || ch == 'l') {
+                displayAlarms();
+            }
+            else if (ch == 'T' || ch == 't') {
+                toggleTimeFormat();
             }
         }
 
@@ -246,7 +349,26 @@ int main()
 
         }
 
-                                                                         /*For 12h Formate*/
+
+
+
+          if (is24HourFormat) {
+                                                     //*FOR 24h FORMAT*/
+                                                       //*printing hour*//
+
+        if(hour< 10){
+            printDigit(0,posX,posY);
+            printDigit(hour,posX+=gap, posY);
+        }
+        else{
+       printDigit(hour/10,posX,posY);
+            printDigit(hour%10,posX+=gap, posY);
+        }
+
+          }
+          else
+          {
+                                                                              /*For 12h Formate*/
         int displayHour = hour % 12;
              if (displayHour == 0) {
                  displayHour = 12;
@@ -260,23 +382,7 @@ int main()
                  printDigit(displayHour / 10, posX, posY);
                  printDigit(displayHour % 10, posX += gap, posY);
              }
-
-
-                                                                                //*FOR 24h FORMAT*//
-
-
-
-                                                                //*printing hour*//
-
- /*       if(hour< 10){
-            printDigit(0,posX,posY);
-            printDigit(hour,posX+=gap, posY);
-        }
-        else{
-       printDigit(hour/10,posX,posY);
-            printDigit(hour%10,posX+=gap, posY);
-        }
-*/
+          }
                                                   //*printing the colon symbol between hours and minutes*//
 
         printDigit(10,posX+=gap,posY);
@@ -309,8 +415,10 @@ int main()
 
                                                             //* Print AM or PM for 12h time format*//
 
-        gotoxy(posX + gap, posY);
-        cout << (hour < 12 ? " AM" : " PM");
+           if (!is24HourFormat) {
+            gotoxy(posX + gap, posY);
+            cout << (hour < 12 ? " AM" : " PM");
+        }
 
                                                                       //* Print date*//
 
@@ -323,6 +431,10 @@ int main()
 
       gotoxy(70, 18);
        cout << "[To set Alarm press S ]" ;
+       gotoxy(15,20);
+       cout<<"[Press T or t to change the  time format ]";
+       gotoxy(15,21);
+       cout<<"[Press L to see the list of alarms]";
                                               //*50 milliseconds processing time is deducted*//
         Sleep(950);
         sec++;
