@@ -1,4 +1,3 @@
-
 #include<iostream>
 #include<dos.h>
 #include<conio.h>
@@ -8,7 +7,6 @@
 #include<fstream>
 #include <mmsystem.h>
 const int MAX_ALARMS = 10;
-
 using namespace std;
 
 const char *d0[7][4] ={  "##","##","##","##",
@@ -104,30 +102,26 @@ const char *sep[7][4] ={ "  ","  ","  "," ",
 HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 COORD CursorPosition;
 
-       //setting position of cursor
+                                                             //setting position of cursor
 
 void gotoxy(int x, int y)
 {
-    //coordinate of row for character cell
-     CursorPosition.X =x;
-    //coordinate of column for character cell
-     CursorPosition.Y =y;
-     //inbuilt function used for setting up cursor anywhere we wanted on console
-     SetConsoleCursorPosition(console, CursorPosition);
+     CursorPosition.X =x;    //coordinate of row for character cell
+     CursorPosition.Y =y;    //coordinate of column for character cell
+     SetConsoleCursorPosition(console, CursorPosition);   //inbuilt function used for setting up cursor anywhere we wanted on console
 
 }
 
  // set bool visible = 0 - invisible, bool visible = 1 - visible
-void setcursor (bool visible, DWORD size){
+void setcursor (bool visible, DWORD size)
+{
     if(size == 0)
       size =20;                                      // default cursor size Changing to numbers from 1 to 20, decreases cursor width
 
-     //A pointer to a CONSOLE_CURSOR_INFO structure that provides the new specifications for the console screen buffer's cursor.
-    CONSOLE_CURSOR_INFO lpCursor;
-     //The visibility of the cursor. If the cursor is invisible, this member is false
-    lpCursor.bVisible = false;
-    //The percentage of the character cell that is filled by the cursor. This value is between 1 and 100.
-    lpCursor.dwSize = size;
+    CONSOLE_CURSOR_INFO lpCursor;     //A pointer to a CONSOLE_CURSOR_INFO structure that provides the new specifications for the console screen buffer's cursor.
+    lpCursor.bVisible = false;     //The visibility of the cursor. If the cursor is invisible, this member is false
+    lpCursor.dwSize = size;    //The percentage of the character cell that is filled by the cursor. This value is between 1 and 100.
+
     SetConsoleCursorInfo(console, &lpCursor);
 
 }
@@ -153,6 +147,8 @@ void printDigit(int no, int x, int y)
     }
   }
 }
+
+
 struct Alarm {
     int hour;
     int minute;
@@ -162,14 +158,17 @@ vector<Alarm> alarms;
 bool is24HourFormat = false;
 
 
-void toggleTimeFormat() {
+void toggleTimeFormat()
+{
     is24HourFormat = !is24HourFormat;
 }
 
-
-void loadAlarms() {
+                                                               // Function to load alarms from file
+void loadAlarms()
+ {
     ifstream file("alarms.txt");
-    if (file.is_open()) {
+    if (file.is_open())
+        {
         Alarm alarm;
         while (file >> alarm.hour >> alarm.minute >> alarm.second) {
             alarms.push_back(alarm);
@@ -178,57 +177,71 @@ void loadAlarms() {
     }
 }
 
-void saveAlarms() {
+
+void saveAlarms()
+{
     ofstream file("alarms.txt");
-    if (file.is_open()) {
-        for (const auto& alarm : alarms) {
+    if (file.is_open())
+    {
+        for (const auto& alarm : alarms)
+        {
             file << alarm.hour << " " << alarm.minute << " " << alarm.second << endl;
         }
         file.close();
     }
 }
-
                                                    // Function to add a new alarm
-void addAlarm(int hour, int minute, int second) {
+void addAlarm(int hour, int minute, int second)
+{
     Alarm alarm = {hour, minute, second};
     alarms.push_back(alarm);
 
-                                               // Limit the number of alarms to MAX_ALARMS
-    if (alarms.size() > MAX_ALARMS) {
+    if (alarms.size() > MAX_ALARMS)    // Limit the number of alarms to MAX_ALARMS
+
+    {
         alarms.erase(alarms.begin());
     }
 
     saveAlarms(); // Save the alarms to file
 }
 
+
                                                      // Function to delete an alarm
-void deleteAlarm(int index) {
-    if (index >= 0 && index < alarms.size()) {
+void deleteAlarm(int index)
+ {
+    if (index >= 0 && index < alarms.size())
+    {
         alarms.erase(alarms.begin() + index);
         saveAlarms(); // Save the alarms to file
     }
 }
+
                                                     // Function to display the list of alarms
-void displayAlarms() {
+void displayAlarms()
+{
     system("cls");
     cout << "List of Alarms:\n";
-    for (int i = 0; i < alarms.size(); ++i) {
+    for (int i = 0; i < alarms.size(); ++i)
+    {
         cout << i + 1 << ". " << alarms[i].hour << "H " << alarms[i].minute << "M " << alarms[i].second << "S\n";
     }
     cout << "Press 'D' to delete an alarm, 'Esc' to go back.\n";
 
     char ch = getch();
-    if (ch == 27) { // 'Esc' key pressed
+    if (ch == 27) // 'Esc' key pressed
+    {
         return;
-    } else if (ch == 'D' || ch == 'd') {
-        cout << "Enter the alarm number to delete: ";
-        int alarmNumber;
-        cin >> alarmNumber;
-        deleteAlarm(alarmNumber - 1);
+    } else if (ch == 'D' || ch == 'd')
+    {
+            cout << "Enter the alarm number to delete: ";
+            int alarmNumber;
+            cin >> alarmNumber;
+            deleteAlarm(alarmNumber - 1);
     }
 }
 
-void playAlarmSound() {
+void playAlarmSound()
+{
     PlaySoundW(L"C:\\Users\\HP\\Downloads\\mixkit-classic-alarm-995.wav", NULL, SND_FILENAME | SND_ASYNC);
 }
 
@@ -237,39 +250,67 @@ void playAlarmSound() {
 
 bool isAlarmSet = false;
 
-void setAlarm(int &alarmHour, int &alarmMin, int &alarmSec) {
+void setAlarm(int &alarmHour, int &alarmMin, int &alarmSec)
+{
     system("cls");
 
     cout << "Set Alarm Time\n";
 
-    if (is24HourFormat) {
-        cout << "Hour (24-hour format): ";
-    } else {
-        cout << "Hour: ";
-    }
-
+    cout << "Hour: ";
     cin >> alarmHour;
 
-    cout << "Minute: ";
-    cin >> alarmMin;
+    if (is24HourFormat)
+    {
+            // If 24-hour format is selected, directly input the minute and second
+            cout << "Minute: ";
+            cin >> alarmMin;
+            cout << "Second: ";
+            cin >> alarmSec;
+    } else
+    {
+        // For 12-hour format, input AM or PM
+        char ampm;
+        cout << "Enter 'A' for AM or 'P' for PM: ";
+        cin >> ampm;
 
-    cout << "Second: ";
-    cin >> alarmSec;
+        // Validate input
+        if (ampm != 'A' && ampm != 'a' && ampm != 'P' && ampm != 'p')
+        {
+            cout << "Invalid input. Setting alarm in 12-hour format with AM.\n";
+            ampm = 'A';
+        }
+
+        // Input the minute and second
+        cout << "Minute: ";
+        cin >> alarmMin;
+        cout << "Second: ";
+        cin >> alarmSec;
+
+//        // Convert to 24-hour format if PM is selected
+//        if (ampm == 'P' || ampm == 'p') {
+//            alarmHour += 12;
+//        }
+    }
 
     isAlarmSet = true;
 }
 
+void soundAlarm()
+{
 
-void soundAlarm() {
     cout << "\a";  // Beep sound to indicate alarm
-        playAlarmSound();  // Play the alarm sound
+    playAlarmSound();  // Play the alarm sound
 
 }
 
-bool isAlarmTime(int alarmHour, int alarmMin, int alarmSec, int currentHour, int currentMin, int currentSec) {
-    if (is24HourFormat) {
+
+bool isAlarmTime(int alarmHour, int alarmMin, int alarmSec, int currentHour, int currentMin, int currentSec)
+{
+    if (is24HourFormat)
+    {
         return (alarmHour == currentHour && alarmMin == currentMin && alarmSec == currentSec);
-    } else {
+    } else
+    {
         // Convert 12-hour format to 24-hour format for comparison
         int convertedAlarmHour = (alarmHour % 12) + (currentHour >= 12 ? 12 : 0);
         int convertedCurrentHour = (currentHour % 12) + (currentHour >= 12 ? 12 : 0);
@@ -278,6 +319,38 @@ bool isAlarmTime(int alarmHour, int alarmMin, int alarmSec, int currentHour, int
                 alarmMin == currentMin && alarmSec == currentSec);
     }
 }
+
+void checkAndTriggerAlarms(int currentHour, int currentMin, int currentSec)
+{
+    vector<int> triggeredAlarms; // Keep track of triggered alarms
+
+    for (int i = 0; i < alarms.size(); ++i)
+    {
+        if (isAlarmTime(alarms[i].hour, alarms[i].minute, alarms[i].second, currentHour, currentMin, currentSec))
+        {
+            triggeredAlarms.push_back(i); // Add the index of the triggered alarm to the list
+        }
+    }
+
+    // Trigger alarms and remove them after playing the sound
+    for (int i : triggeredAlarms)
+    {
+        gotoxy(15, 19);
+        cout << "ALARM!!!";
+        soundAlarm();
+        isAlarmSet = false;
+
+        // Remove the triggered alarm
+        alarms.erase(alarms.begin() + i);
+    }
+
+    if (!triggeredAlarms.empty())
+    {
+        saveAlarms(); // Save the alarms to file after removing triggered alarms
+        Sleep(950);  // Delay before triggering the next set of alarms (50 milisecond seconds in this example)
+    }
+}
+
 
 
 
@@ -315,6 +388,7 @@ int main()
     int posX;
     int posY= 8;
     int alarmHour=0, alarmMin=0, alarmSec=0;
+    bool isAM = true;
     while(1){
         system("cls");
 
@@ -323,77 +397,102 @@ int main()
 
         posX= 15;
 
-        if(kbhit()){                     //kbhit function is used to determine if a key has been pressed or not.
+        if(kbhit())
+            {                     //kbhit function is used to determine if a key has been pressed or not.
             char ch = getch();           //Stores the pressed key in ch
-            if(ch==27){                  // Terminates the loop when escape(key) is pressed and ends the program
+            if(ch==27)
+            {                  // Terminates the loop when escape(key) is pressed and ends the program
                 break;
             }
-            else if (ch == 'S' || ch == 's') {
+            else if (ch == 'S' || ch == 's')
+            {
                 setAlarm(alarmHour, alarmMin, alarmSec);
                  addAlarm(alarmHour, alarmMin, alarmSec);
 
             }
-            else if (ch == 'L' || ch == 'l') {
+            else if (ch == 'L' || ch == 'l')
+            {
                 displayAlarms();
             }
-            else if (ch == 'T' || ch == 't') {
+            else if (ch == 'T' || ch == 't')
+            {
                 toggleTimeFormat();
             }
         }
 
-         if (isAlarmSet && isAlarmTime(alarmHour, alarmMin, alarmSec, hour, min, sec)) {
-            gotoxy(15, 19);
-            cout << "ALARM!!!";
-            soundAlarm();
-            isAlarmSet = false;
+    checkAndTriggerAlarms(hour, min, sec);
 
+     // Check each alarm
+        for (int i = 0; i < alarms.size(); ++i)
+        {
+            int currentHour = lotm->tm_hour;
+            int currentMin = lotm->tm_min;
+            int currentSec = lotm->tm_sec;
+
+            if (isAlarmSet && isAlarmTime(alarms[i].hour, alarms[i].minute, alarms[i].second, hour, min, sec))
+            {
+                gotoxy(15, 19);
+                cout << "ALARM!!!";
+                soundAlarm();
+                isAlarmSet = false;
+            }
+
+            // Print the list of alarm times
+            gotoxy(70, 16 + i);
+            cout << "Alarm " << i + 1 << " Time: " << alarms[i].hour << "H " << alarms[i].minute << "M " << alarms[i].second << "S";
         }
 
 
 
+                                                                              //*FOR 24h FORMAT*//
 
-          if (is24HourFormat) {
-                                                     //*FOR 24h FORMAT*/
-                                                       //*printing hour*//
+          if (is24HourFormat)
+        {
+                    /*printing hour*/
+                if(hour< 10)
+                {
+                    printDigit(0,posX,posY);
+                    printDigit(hour,posX+=gap, posY);
+                }
+                else
+                {
+                    printDigit(hour/10,posX,posY);
+                    printDigit(hour%10,posX+=gap, posY);
+                }
 
-        if(hour< 10){
-            printDigit(0,posX,posY);
-            printDigit(hour,posX+=gap, posY);
         }
-        else{
-       printDigit(hour/10,posX,posY);
-            printDigit(hour%10,posX+=gap, posY);
-        }
-
-          }
-          else
-          {
-                                                                              /*For 12h Formate*/
-        int displayHour = hour % 12;
-             if (displayHour == 0) {
+        else
+        {                                    /*For 12h Formate*/
+             int displayHour = hour % 12;
+             if (displayHour == 0)
+            {
                  displayHour = 12;
              }
 
-             if(displayHour < 10) {
+             if(displayHour < 10)
+            {
                  printDigit(0, posX, posY);
                  printDigit(displayHour, posX += gap, posY);
              }
-             else {
+             else
+            {
                  printDigit(displayHour / 10, posX, posY);
                  printDigit(displayHour % 10, posX += gap, posY);
              }
-          }
+        }
                                                   //*printing the colon symbol between hours and minutes*//
 
         printDigit(10,posX+=gap,posY);
 
 
                                                                 //*printing minutes*//
-        if(min< 10){
+        if(min< 10)
+        {
             printDigit(0,posX+=gap,posY);
             printDigit(min,posX+=gap, posY);
         }
-        else{
+        else
+        {
             printDigit(min/10,posX+=gap,posY);
             printDigit(min%10,posX+=gap, posY);
         }
@@ -404,18 +503,21 @@ int main()
 
                                                                //*printing seconds*//
 
-        if(sec< 10){
+        if(sec< 10)
+        {
             printDigit(0,posX+=gap,posY);
             printDigit(sec,posX+=gap, posY);
         }
-        else{
+        else
+        {
             printDigit(sec/10,posX+=gap,posY);
             printDigit(sec%10,posX+=gap, posY);
         }
 
                                                             //* Print AM or PM for 12h time format*//
 
-           if (!is24HourFormat) {
+        if (!is24HourFormat)
+        {
             gotoxy(posX + gap, posY);
             cout << (hour < 12 ? " AM" : " PM");
         }
@@ -425,11 +527,11 @@ int main()
         gotoxy(15, 17);
         cout << "DATE (Day/Month/Year): " << day << "/" << month << "/" << year;
 
-                                                                     //*Print Alarm Timer*//
-      gotoxy(70, 17);
-       cout << "Alarm Time : " <<   alarmHour<< "H " << alarmMin<< "M " <<alarmSec<<"S" ;
+//                                                                     //*Print Alarm Timer*//
+//      gotoxy(70, 17);
+//       cout << "Alarm Time : " <<   alarmHour<< "H " << alarmMin<< "M " <<alarmSec<<"S" ;
 
-      gotoxy(70, 18);
+      gotoxy(15, 22);
        cout << "[To set Alarm press S ]" ;
        gotoxy(15,20);
        cout<<"[Press T or t to change the  time format ]";
